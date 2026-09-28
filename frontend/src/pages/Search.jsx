@@ -19,8 +19,8 @@ export default function Search() {
     if (!q) { setResults([]); setCount(0); return; }
     setLoading(true);
     api.get(`/courses/search?q=${encodeURIComponent(q)}`)
-      .then(({ data }) => { setResults(data.courses); setCount(data.count); })
-      .catch(() => setResults([]))
+      .then(({ data }) => { setResults(Array.isArray(data?.courses) ? data.courses : []); setCount(data?.count || 0); })
+      .catch(() => { setResults([]); setCount(0); })
       .finally(() => setLoading(false));
   }, [q]);
 

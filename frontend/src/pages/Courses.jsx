@@ -13,15 +13,23 @@ export default function Courses() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [cat, setCat] = useState("All");
   const [diff, setDiff] = useState("All");
   const [q, setQ] = useState("");
 
-  useEffect(() => {
-    api.get("/courses").then(({ data }) => { setCourses(data.courses); setLoading(false); }).catch(() => setLoading(false));
-  }, []);
+  const loadCourses = () => {
+    setLoading(true);
+    setError(false);
+    api.get("/courses")
+      .then(({ data }) => setCourses(Array.isArray(data?.courses) ? data.courses : []))
+      .catch(() => { setCourses([]); setError(true); })
+      .finally(() => setLoading(false));
+  };
 
-  const filtered = useMemo(() => courses.filter((c) =>
+  useEffect(() => { loadCourses(); }, []);
+
+  const filtered = useMemo(() => (Array.isArray(courses) ? courses : []).filter((c) =>
     (cat === "All" || c.category === cat) && (diff === "All" || c.difficulty === diff)
   ), [courses, cat, diff]);
 
@@ -74,9 +82,17 @@ export default function Courses() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-24"><Loader2 className="h-8 w-8 animate-spin text-cyan-500" /></div>
+          <div className="flex justify-center py-24" data-testid="courses-loading"><Loader2 className="h-8 w-8 animate-spin text-cyan-500" /></div>
+        ) : error ? (
+          <div className="py-24 text-center" data-testid="courses-error">
+            <p className="text-slate-300">We couldn't load courses right now.</p>
+            <p className="mt-1 text-sm text-slate-500">Please check your connection and try again.</p>
+            <Button onClick={loadCourses} className="mt-5 bg-cyan-500 font-semibold text-slate-950 hover:bg-cyan-400">Retry</Button>
+          </div>
+        ) : courses.length === 0 ? (
+          <p className="py-24 text-center text-slate-400" data-testid="courses-empty">No courses are available yet. Please check back soon.</p>
         ) : filtered.length === 0 ? (
-          <p className="py-24 text-center text-slate-400">No courses match those filters.</p>
+          <p className="py-24 text-center text-slate-400" data-testid="courses-no-match">No courses match those filters.</p>
         ) : (
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-testid="courses-grid">
             {filtered.map((c) => <CourseCard key={c.slug} course={c} />)}
