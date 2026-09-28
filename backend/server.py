@@ -18,6 +18,7 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from fastapi import FastAPI, APIRouter, Request, Response, HTTPException, Depends
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -651,6 +652,15 @@ async def http_exc_handler(request: Request, exc: HTTPException):
     return JSONResponse(status_code=exc.status_code, content={
         "success": False,
         "error": {"code": codes.get(exc.status_code, "ERROR"), "message": exc.detail},
+    })
+
+
+@app.exception_handler(StarletteHTTPException)
+async def starlette_exc_handler(request: Request, exc: StarletteHTTPException):
+    codes = {404: "NOT_FOUND", 405: "METHOD_NOT_ALLOWED"}
+    return JSONResponse(status_code=exc.status_code, content={
+        "success": False,
+        "error": {"code": codes.get(exc.status_code, "ERROR"), "message": exc.detail or "Not found"},
     })
 
 

@@ -12,7 +12,7 @@ const links = [
   { to: "/courses", label: "Courses", id: "nav-courses-link" },
   { to: "/security-lab", label: "Security Lab", id: "nav-securitylab-link" },
   { to: "/security-lab/dashboard", label: "WAF Demo", id: "nav-wafdemo-link" },
-  { to: "/api/docs", label: "API Docs", id: "nav-apidocs-link" },
+  { to: "/docs", label: "API Docs", id: "nav-apidocs-link" },
 ];
 
 export const Navbar = () => {

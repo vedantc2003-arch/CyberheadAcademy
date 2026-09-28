@@ -21,7 +21,7 @@ export const Footer = () => (
             <li><Link to="/courses" className="hover:text-cyan-400">Courses</Link></li>
             <li><Link to="/security-lab" className="hover:text-cyan-400">Security Lab</Link></li>
             <li><Link to="/security-lab/dashboard" className="hover:text-cyan-400">WAF Demo</Link></li>
-            <li><Link to="/api/docs" className="hover:text-cyan-400">API Docs</Link></li>
+            <li><Link to="/docs" className="hover:text-cyan-400">API Docs</Link></li>
           </ul>
         </div>
         <div>

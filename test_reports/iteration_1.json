@@ -1,0 +1,42 @@
+{
+  "summary": "Ran full backend regression (36 pytest tests, all pass) and end-to-end UI walkthrough on CyberHead Academy. Backend APIs, auth (JWT + httpOnly cookie), courses (8 seeded, filter, search, slug/id lookup, enroll idempotency), student dashboard (progresses 31/48/72), profile update, contact form, admin RBAC (401 unauth, 403 non-admin), rate limiting on login, Security Lab classification (SQLi/XSS/CMD/PATH), request-log middleware and stats all working. Found one critical routing bug: the frontend React route '/api/docs' collides with the backend '/api/*' ingress, so the API Docs page is unreachable (navbar link returns raw JSON 404 from FastAPI). Everything else UI-wise (Home, Courses, Course details w/ curriculum, Search, Login/Register/Dashboard/Profile, Security Lab + WAF dashboard, Contact, 404) works correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "any unmatched /api/*", "issue": "Unmatched routes return FastAPI default {\"detail\":\"Not Found\"} instead of the standard {success:false,error:{code,message}} envelope defined by the HTTPException handler. Add a StarletteHTTPException / catch-all 404 handler for consistency."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "App router / Navbar / Footer", "issue": "Route path '/api/docs' collides with backend ingress rule (all /api/* routes go to FastAPI). Navigating to /api/docs from navbar 'API Docs' link or footer returns raw JSON {\"detail\":\"Not Found\"} from the backend; the ApiDocs React page is never mounted.", "selector": "Navbar 'API Docs' link -> Link to='/api/docs'", "priority": "CRITICAL"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_cyberhead.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Rename frontend route '/api/docs' to something outside the /api/* namespace (e.g. '/docs' or '/api-docs'). Update: /app/frontend/src/App.js, /app/frontend/src/components/Navbar.jsx (nav-apidocs-link), /app/frontend/src/components/Footer.jsx.",
+    "(Nice-to-have) Register a Starlette 404 handler that returns the same {success:false, error:{code:'NOT_FOUND', message:'...'}} envelope so unknown /api paths are consistent with app errors."
+  ],
+  "critical_code_review_comments": [
+    "Route collision: any frontend route that starts with '/api' will be shadowed by the backend ingress. Keep the SPA namespace fully outside '/api'.",
+    "Global exception handler only wraps HTTPException — Starlette-raised 404s (unmatched routes, method not allowed) bypass it and leak FastAPI defaults.",
+    "get_current_user reads token from cookie OR Authorization header; consistent with client that stores 'ch_token' in localStorage and also receives httpOnly cookie — good.",
+    "bcrypt is used correctly, hashes are $2b$ format; admin seed is idempotent and re-hashes when ADMIN_PASSWORD changes — matches playbook.",
+    "Rate limiting is in-memory (per-process) — acceptable for demo; note it will reset on backend reload and won't work across multiple workers.",
+    "CORS uses allow_credentials=True with allow_origins '*' via env default. In production this combination is invalid per CORS spec (browsers reject credentialed requests with wildcard origins). CORS_ORIGINS env should be a specific origin in prod."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_cyberhead.py (new backend regression suite, 36 tests)"
+  ],
+  "success_rate": {"backend": "100% (36/36)", "frontend": "~95% (1 route bug)"},
+  "test_credentials": "Admin: admin@cyberheadacademy.com / CyberHead@Admin2025 | Student: sanket@cyberheadacademy.com / Student@2025 (both verified working)",
+  "seed_data_creation": "Test created ~2 disposable users (TEST_*, register flow) and 1 extra student enrollment during idempotency check. No cleanup — safe since prefixed / harmless.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Regression suite at /app/backend/tests/test_cyberhead.py. Once E1 renames the /api/docs frontend route, re-verify by navigating to the new URL, clicking 'API Docs' in navbar+footer, and confirming ApiDocs page renders with 'Authentication' group. Also verify the swagger-link still opens /api/swagger. Dashboard route is '/security-lab/dashboard' (not '/security-lab-dashboard'). Logout is inside Navbar user dropdown with data-testid='menu-logout' (not 'logout-button').",
+  "rca of the issue": "The React SPA registers Route path='/api/docs'. In this environment, the Kubernetes ingress unconditionally routes any URL prefixed with '/api' to the FastAPI service on port 8001. Because '/api/docs' matches the ingress rule before it can be handled by the frontend, the request hits FastAPI, which has no such route registered (docs are served at /api/swagger), so it returns the default 404 JSON. Fix: rename the frontend route to a path outside the '/api' namespace (e.g. '/docs' or '/api-docs') and update the two links in Navbar.jsx and Footer.jsx accordingly."
+}

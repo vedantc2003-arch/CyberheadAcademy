@@ -37,7 +37,7 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/security-lab" element={<SecurityLab />} />
               <Route path="/security-lab/dashboard" element={<SecurityLabDashboard />} />
-              <Route path="/api/docs" element={<ApiDocs />} />
+              <Route path="/docs" element={<ApiDocs />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
