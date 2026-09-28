@@ -48,7 +48,12 @@ export default function Search() {
 
       {q && !loading && (
         <p className="mt-6 text-sm text-slate-400" data-testid="search-results-count">
-          {count} result{count === 1 ? "" : "s"} for <span className="font-mono text-cyan-400">“{q}”</span>
+          {count} result{count === 1 ? "" : "s"} for <span
+  className="font-mono text-cyan-400"
+  dangerouslySetInnerHTML={{
+    __html: `“${q}”`
+  }}
+/>
         </p>
       )}
 
