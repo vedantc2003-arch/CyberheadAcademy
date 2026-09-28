@@ -31,8 +31,15 @@ export default function Home() {
   const [meta, setMeta] = useState({ testimonials: [], faqs: [] });
 
   useEffect(() => {
-    api.get("/courses").then(({ data }) => setCourses(data.courses)).catch(() => {});
-    api.get("/meta").then(({ data }) => setMeta(data)).catch(() => {});
+    api.get("/courses")
+      .then(({ data }) => setCourses(Array.isArray(data?.courses) ? data.courses : []))
+      .catch(() => setCourses([]));
+    api.get("/meta")
+      .then(({ data }) => setMeta({
+        testimonials: Array.isArray(data?.testimonials) ? data.testimonials : [],
+        faqs: Array.isArray(data?.faqs) ? data.faqs : [],
+      }))
+      .catch(() => setMeta({ testimonials: [], faqs: [] }));
   }, []);
 
   const featured = courses.find((c) => c.featured) || courses[0];
