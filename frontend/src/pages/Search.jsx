@@ -11,6 +11,7 @@ export default function Search() {
   const navigate = useNavigate();
 
   const q = params.get("q") || "";
+  const xssDemo = params.get("xssDemo") === "1";
 
   const [term, setTerm] = useState(q);
   const [results, setResults] = useState([]);
@@ -18,6 +19,8 @@ export default function Search() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    setTerm(q);
+
     if (!q) {
       setResults([]);
       setCount(0);
@@ -46,11 +49,21 @@ export default function Search() {
   const submit = (e) => {
     e.preventDefault();
 
-    setParams(
-      term.trim()
-        ? { q: term.trim() }
-        : {}
-    );
+    const value = term.trim();
+
+    if (!value) {
+      setParams({});
+      return;
+    }
+
+    /*
+     * xssDemo=1 enables the controlled security-lab
+     * demonstration.
+     */
+    setParams({
+      q: value,
+      xssDemo: "1",
+    });
   };
 
   return (
@@ -89,21 +102,64 @@ export default function Search() {
         </Button>
       </form>
 
-      {q && !loading && (
+      {/* =====================================================
+          CONTROLLED XSS SECURITY LAB
+          ===================================================== */}
+
+      {xssDemo && q && !loading && (
+        <div className="mt-8 rounded-xl border border-red-500/30 bg-red-500/10 p-5">
+
+          <p className="mb-2 font-mono text-xs uppercase tracking-wider text-red-400">
+            XSS Security Lab
+          </p>
+
+          <p className="mb-4 text-sm text-slate-400">
+            Controlled security testing environment.
+          </p>
+
+          <div className="rounded-lg border border-slate-700 bg-slate-950 p-4">
+
+            <p className="mb-2 text-xs text-slate-500">
+              Search result:
+            </p>
+
+            {/*
+             * INTENTIONALLY VULNERABLE CODE
+             *
+             * This is only for the controlled WAF demonstration.
+             * Do not use this pattern in production functionality.
+             */}
+            <div
+              className="font-mono text-cyan-400"
+              dangerouslySetInnerHTML={{
+                __html: `“${q}”`,
+              }}
+            />
+
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================
+          NORMAL SEARCH RESULT
+          ===================================================== */}
+
+      {!xssDemo && q && !loading && (
         <p
           className="mt-6 text-sm text-slate-400"
           data-testid="search-results-count"
         >
           {count} result{count === 1 ? "" : "s"} for{" "}
 
-          <span
-            className="font-mono text-cyan-400"
-            dangerouslySetInnerHTML={{
-              __html: `“${q}”`
-            }}
-          />
+          <span className="font-mono text-cyan-400">
+            “{q}”
+          </span>
         </p>
       )}
+
+      {/* =====================================================
+          SEARCH RESULTS
+          ===================================================== */}
 
       {loading ? (
 
