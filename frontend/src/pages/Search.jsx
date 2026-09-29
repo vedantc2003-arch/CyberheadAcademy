@@ -35,6 +35,7 @@ export default function Search() {
         setResults(
           Array.isArray(data?.courses) ? data.courses : []
         );
+
         setCount(data?.count || 0);
       })
       .catch(() => {
@@ -57,8 +58,9 @@ export default function Search() {
     }
 
     /*
-     * xssDemo=1 enables the controlled security-lab
-     * demonstration.
+     * xssDemo=1 enables the controlled WAF/XSS demonstration.
+     * The search value remains part of the URL so SafeLine
+     * can inspect the HTTP request.
      */
     setParams({
       q: value,
@@ -69,9 +71,13 @@ export default function Search() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
 
+      {/* PAGE TITLE */}
+
       <h1 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
         Search courses
       </h1>
+
+      {/* SEARCH BOX */}
 
       <form
         onSubmit={submit}
@@ -100,6 +106,7 @@ export default function Search() {
         >
           Search
         </Button>
+
       </form>
 
       {/* =====================================================
@@ -126,8 +133,9 @@ export default function Search() {
             {/*
              * INTENTIONALLY VULNERABLE CODE
              *
-             * This is only for the controlled WAF demonstration.
-             * Do not use this pattern in production functionality.
+             * This is ONLY for the controlled WAF demonstration.
+             * Do not use this pattern for normal production
+             * functionality.
              */}
             <div
               className="font-mono text-cyan-400"
@@ -158,7 +166,7 @@ export default function Search() {
       )}
 
       {/* =====================================================
-          SEARCH RESULTS
+          LOADING / RESULTS
           ===================================================== */}
 
       {loading ? (
